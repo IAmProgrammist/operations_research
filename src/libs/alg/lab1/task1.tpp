@@ -63,72 +63,95 @@ std::vector<std::vector<T>> getPermutations(std::vector<T> &baseSet) {
 }
 
 void subtractLineFromOther(std::vector<std::vector<double>>& origin, int indexLeadingLine, int indexEnablingElement) {
-    // Ведущий элемент равен 0 - нужно выбросить исключение
-    if (std::abs(origin[indexLeadingLine][indexEnablingElement]) < EPS) throw std::invalid_argument("Enabling element can't be equal 0");
-
-    // Преобразуем ведущую строку таким образом, чтобы разрещающий элемент стал равен 1
+    // Преобразовать ведущую строку таким образом, чтобы разрещающий элемент стал равен 1.
     double originEnablingElement = origin[indexLeadingLine][indexEnablingElement];
     for (int i = 0; i < origin[indexLeadingLine].size(); i++) 
+        // Разделить каждый элемент строки по индексу indexLeadingLine
+        // на разрешающий элемент
         origin[indexLeadingLine][i] /= originEnablingElement;
     
-    // Для остальных строк выполним следующее
+    // Для всех остальных строк с номером i
     for (int i = 0; i < origin.size(); i++) {
         if (i == indexLeadingLine) continue;
 
         // k - коэффициент, на который нужно домножить ведущую строку и вычесть её
         double k = origin[i][indexEnablingElement];
 
+        // Для всех остальных элементов j в строке i
         for (int j = 0; j < origin[indexLeadingLine].size(); j++)
+            // Вычесть ведущую строку indexLeadingLine из строки i
             origin[i][j] -= origin[indexLeadingLine][j] * k;
     }
 }
 
 // Функция получения базисов
-std::vector<std::vector<std::vector<double>>> getBasises(std::vector<std::vector<double>> origin) {
+std::vector<std::vector<std::vector<double>>> getAllBasises(std::vector<std::vector<double>> origin) {
+    // result - массив полученных систем 
     std::vector<std::vector<std::vector<double>>> result;
 
-    // Создадим массив индексов
+    // indices - массив неизвестных в системе, заполняем
+    // его индексами 0 ... l - 1, где l - длина 
+    // матрицы origin
     std::vector<int> indices;
     for (int i = 0; i < origin[0].size() - 1; i++) 
         indices.push_back(i);
     
-    // Для каждого сочетания из базисов
+    /*
+    Для каждого сочетания в indices из l по h (h - высота матрицы) 
+    получить набор базисных неизвестных basis.
+    */
     for (auto basis : getCombinations(indices, origin.size())) {
-        // Будем перебирать все возможные перестановки строк в матрице
+        // Для каждой перестановки строк в матрице origin matrixPermutation
         for (auto matrixPermutation : getPermutations(origin)) {
+            auto copyMatrixPermutation = matrixPermutation;
             bool badPermutation = false;
+            
+            // Для каждой строки в матрице (ввод счётчика строк i)
             for (int i = 0; i < matrixPermutation.size(); i++) {
-                try {
-                    subtractLineFromOther(matrixPermutation, i, basis[i]);
-                } catch (std::invalid_argument& ex) {
-                    // Проверим, что случилось
+                // Разрешающий элемент равен 0? 
+                if (std::abs(matrixPermutation[i][basis[i]]) < EPS) {
                     bool allZeros = true;
                     for (int j = 0; (j < matrixPermutation[i].size() - 1) && allZeros; j++) {
                         if (std::abs(matrixPermutation[i][j]) > EPS) {
-                            // Неудачное расположение строк, продолжим перебор
+                            // Неудачное расположение строк, необходимо
+                            // перейти к другой перестановке
                             badPermutation = true;
                             allZeros = false;
                             break;
                         }
                     }
 
-                    if (!allZeros) break;
+                    // Коэффициенты в i строке содержат только 0?
+                    if (!allZeros) {
+                        // Перейти к следующей перестановке строк
+                        break;
+                    }
 
-                    // Есть нулевая строка с b_i, не равным 0. Поэтому пропадаем. 
-                    if (std::abs(matrixPermutation[i].back()) > EPS) return {};
+                    // b_i равен 0?
+                    if (std::abs(matrixPermutation[i].back()) > EPS) {
+                        // Система несовместима. Вернуть пустой массив.
+                        return {};
+                    }
 
+                    /*
+                    Удалить строку i из матрицы, полученной перестановкой строк,
+                    и вызвать функцию getAllBasises с полученной матрицей.
+                    */
                     if (allZeros) {
-                        // Удаляем ненужную строку
-                        origin.erase(origin.begin() + i);
-                        return getBasises(origin);
+                        copyMatrixPermutation.erase(copyMatrixPermutation.begin() + i);
+                        return getAllBasises(copyMatrixPermutation);
                     }
 
                     break;
                 }
+
+                // Выбрать ведущую переменную из basis[i], преобразовать i строку и вычесть её из остальных
+                subtractLineFromOther(matrixPermutation, i, basis[i]);
             }
 
             if (badPermutation) continue;
 
+            // Полученную матрицу matrixPermutation добавить в result, закончить перебор перестановок
             result.push_back(matrixPermutation);
             break;
         }
