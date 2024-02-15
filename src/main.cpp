@@ -1,9 +1,11 @@
 #include <iostream>
 #include <iomanip>
+#include <windows.h>
 
 #include "libs/alg/lab1/task1.tpp"
 
 int main() {
+    SetConsoleOutputCP(CP_UTF8);
     std::vector<std::vector<double>> matrix = {
     {1,  -4,  8,  9, -3, -1, 87},
     {8,   1, -3,  4,  5,  6, 11},
@@ -12,8 +14,24 @@ int main() {
 
     auto res = getAllBasises(matrix);
 
+    std::cout << "==================================================================================================================\n";
     for (auto& matrix : res) {
-        for (auto & line : matrix) {
+        std::cout << "Выбранные базисные переменные: ";
+        for (auto& bas : matrix.indices) {
+            std::cout << "x" << (bas + 1) << " ";
+        }
+        std::cout << "\n\nПолученная система: " << std::endl;
+
+
+        for (int i = 0; i < matrix.matrix[0].size() - 1; i++) {
+            std::stringstream buf;
+            buf << "a" << (i + 1);
+            std::cout << std::setw(15) << buf.str() << " ";
+        }
+
+        std::cout << std::setw(15) << "b" << std::endl;
+
+        for (auto & line : matrix.matrix) {
             for (auto & element : line) {
                 std::cout << std::setw(15) << element << " ";
             }
@@ -21,6 +39,6 @@ int main() {
             std::cout << "\n";
         }
         
-        std::cout << "\n";
+        std::cout << "==================================================================================================================\n";
     }
 }

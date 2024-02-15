@@ -84,10 +84,15 @@ void subtractLineFromOther(std::vector<std::vector<double>>& origin, int indexLe
     }
 }
 
-// Функция получения базисов
-std::vector<std::vector<std::vector<double>>> getAllBasises(std::vector<std::vector<double>> origin) {
+// Вспомогательная СД
+struct Basis {
+    std::vector<int> indices;
+    std::vector<std::vector<double>> matrix;
+};
+
+std::vector<Basis> getAllBasises(std::vector<std::vector<double>> origin) {
     // result - массив полученных систем 
-    std::vector<std::vector<std::vector<double>>> result;
+    std::vector<Basis> result;
 
     // indices - массив неизвестных в системе, заполняем
     // его индексами 0 ... l - 1, где l - длина 
@@ -152,7 +157,7 @@ std::vector<std::vector<std::vector<double>>> getAllBasises(std::vector<std::vec
             if (badPermutation) continue;
 
             // Полученную матрицу matrixPermutation добавить в result, закончить перебор перестановок
-            result.push_back(matrixPermutation);
+            result.push_back({basis, matrixPermutation});
             break;
         }
     }
