@@ -63,10 +63,10 @@ std::vector<std::vector<T>> getPermutations(std::vector<T> &baseSet) {
 }
 
 void subtractLineFromOther(std::vector<std::vector<double>>& origin, int indexLeadingLine, int indexEnablingElement) {
-    // Преобразовать ведущую строку таким образом, чтобы разрещающий элемент стал равен 1.
+    // Преобразуем ведущую строку таким образом, чтобы разрещающий элемент стал равен 1.
     double originEnablingElement = origin[indexLeadingLine][indexEnablingElement];
     for (int i = 0; i < origin[indexLeadingLine].size(); i++) 
-        // Разделить каждый элемент строки по индексу indexLeadingLine
+        // Разделим каждый элемент строки по индексу indexLeadingLine
         // на разрешающий элемент
         origin[indexLeadingLine][i] /= originEnablingElement;
     
@@ -103,7 +103,7 @@ std::vector<Basis> getAllBasises(std::vector<std::vector<double>> origin) {
     
     /*
     Для каждого сочетания в indices из l по h (h - высота матрицы) 
-    получить набор базисных неизвестных basis.
+    получим набор базисных неизвестных basis.
     */
     for (auto basis : getCombinations(indices, origin.size())) {
         // Для каждой перестановки строк в матрице origin matrixPermutation
@@ -150,13 +150,13 @@ std::vector<Basis> getAllBasises(std::vector<std::vector<double>> origin) {
                     break;
                 }
 
-                // Выбрать ведущую переменную из basis[i], преобразовать i строку и вычесть её из остальных
+                // Выберем ведущую переменную из basis[i], преобразуем i строку и вычтем её из остальных
                 subtractLineFromOther(matrixPermutation, i, basis[i]);
             }
 
             if (badPermutation) continue;
 
-            // Полученную матрицу matrixPermutation добавить в result, закончить перебор перестановок
+            // Полученную матрицу matrixPermutation добавим в result, закончим перебор перестановок
             result.push_back({basis, matrixPermutation});
             break;
         }

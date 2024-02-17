@@ -2,18 +2,21 @@
 #include <iomanip>
 #include <windows.h>
 
-#include "libs/alg/lab1/task1.tpp"
+#include "../../libs/alg/lab1/task1.tpp"
 
 int main() {
     SetConsoleOutputCP(CP_UTF8);
+    // Инициализируем матрицу
     std::vector<std::vector<double>> matrix = {
     {1,  -4,  8,  9, -3, -1, 87},
     {8,   1, -3,  4,  5,  6, 11},
     {4,   0,  1,  3, -2, -5, 17},
     {-3, -4,  7,  6, -1,  4, 70}};;
 
+    // Получаем базисные решения
     auto res = getAllBasises(matrix);
 
+    // Выводим базисные решения
     std::cout << "==================================================================================================================\n";
     for (auto& matrix : res) {
         std::cout << "Выбранные базисные переменные: ";
