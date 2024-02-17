@@ -67,7 +67,7 @@ int main() {
     }
 
     // Выводим значение z и базисное решение
-    std::cout << maxFunctionValue << std::endl;
+    std::cout << "Zmax: " << maxFunctionValue << "\n" << "Оптимальное решение: ";
     for (int i = 0; i < maxB.size(); i++) {
         std::cout << maxB[i] << " ";
     }
