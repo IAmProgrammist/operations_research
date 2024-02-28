@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <cstdlib>
 #include <stdexcept>
@@ -62,7 +64,8 @@ std::vector<std::vector<T>> getPermutations(std::vector<T> &baseSet) {
     return getPermutations(baseSet, {});
 }
 
-void subtractLineFromOther(std::vector<std::vector<double>>& origin, int indexLeadingLine, int indexEnablingElement) {
+template <std::size_t T>
+void subtractLineFromOther(std::vector<std::array<double, T>>& origin, int indexLeadingLine, int indexEnablingElement) {
     // Преобразуем ведущую строку таким образом, чтобы разрещающий элемент стал равен 1.
     double originEnablingElement = origin[indexLeadingLine][indexEnablingElement];
     for (int i = 0; i < origin[indexLeadingLine].size(); i++) 
@@ -85,14 +88,16 @@ void subtractLineFromOther(std::vector<std::vector<double>>& origin, int indexLe
 }
 
 // Вспомогательная СД
+template <std::size_t T>
 struct Basis {
     std::vector<int> indices;
-    std::vector<std::vector<double>> matrix;
+    std::vector<std::array<double, T>> matrix;
 };
 
-std::vector<Basis> getAllBasises(std::vector<std::vector<double>> origin) {
+template <std::size_t T>
+std::vector<Basis<T>> getAllBasises(std::vector<std::array<double, T>> origin) {
     // result - массив полученных систем 
-    std::vector<Basis> result;
+    std::vector<Basis<T>> result;
 
     // indices - массив неизвестных в системе, заполняем
     // его индексами 0 ... l - 1, где l - длина 

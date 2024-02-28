@@ -1,13 +1,14 @@
 #include <iostream>
 #include <iomanip>
 #include <windows.h>
+#include <array>
 
 #include "../../libs/alg/lab1/task1.tpp"
 
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     // Инициализируем матрицу
-    std::vector<std::vector<double>> matrix = {
+    std::vector<std::array<double, 7>> matrix = {
     {1,  -4,  8,  9, -3, -1, 87},
     {8,   1, -3,  4,  5,  6, 11},
     {4,   0,  1,  3, -2, -5, 17},
