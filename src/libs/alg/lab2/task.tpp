@@ -8,13 +8,14 @@
 
 template <std::size_t T>
 auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
-    // Определим, какие переменные должны быть базисными в опорном решении и занесём их в список functionBasisVars
+    // Определим, какие переменные могут быть базисными в опорном решении и занесём их в список functionBasisVars
+    // (Если yi = 0, то переменная может быть базисной)
     std::vector<int> functionBasisVars;
     for (int i = 0; i < function.size() - 1; i++) 
         if (std::abs(function[i]) < EPS) 
             functionBasisVars.push_back(i);
     
-    // Получим все базисные решения
+    // Получим все базисные решения и для каждого решения basis
     for (auto& basis : getAllBasises(matrix)) {
         bool isAllBsMoreOrEqualToZero = true;
         for (int i = 0; i < basis.matrix.size() && isAllBsMoreOrEqualToZero; i++) {
@@ -28,7 +29,8 @@ auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::
             continue;
         }
 
-        // Если несвободные переменные из функции входят в список базисных из опорного решения
+        // Если список базисных переменных из опорного решения basis входит в список
+        // functionBasisVars
         std::sort(basis.indices.begin(), basis.indices.end());
         if (std::includes(basis.indices.begin(), basis.indices.end(), functionBasisVars.begin(), functionBasisVars.end()))
             // Возвращаем искомый базис
@@ -42,13 +44,14 @@ auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::
 template <std::size_t T>
 double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
     auto preparedMatrix = getMatrixForSimplexMethod(matrix, function);
-    // Строим симплекс-таблицу, копируя в неё матрицу matrix.
+    // Строим симплекс-таблицу, копируя в неё матрицу matrix
     std::vector<std::array<double, T>> simplexMatrix(preparedMatrix.matrix);
-    // Добавляем новую строку - целевую функцию.
+    // Добавляем новую строку - целевую функцию, умножая её коэф. yi на -1
     simplexMatrix.push_back(function);
     for (int i = 0; i < T; i++)
         simplexMatrix.back()[i] *= -1;
 
+    // Бесконечный цикл
     while (true) {
         // Найдём наибольший по модулю отрицательный элемент в последней строке, кроме свободного члена.
         int minColumnIndex = -1;
@@ -57,10 +60,13 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
                 minColumnIndex = i;
         }
 
-        // Если такого элемента нет, то выходим из цикла.
-        if (minColumnIndex == -1) break;
+        // Такой элемент найден?
+        if (minColumnIndex == -1) { 
+            // Решение получено, можно выходить из цикла
+            break;
+        }
 
-        // Определим генеральный элемент таблицы.
+        // Определим генеральный элемент таблицы
         int minRowIndex = -1;
         for (int i = 0; i < simplexMatrix.size() - 1; i++) {
             if (simplexMatrix[i][minColumnIndex] <= EPS) continue;
@@ -69,14 +75,17 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
             simplexMatrix[i].back() / simplexMatrix[i][minColumnIndex]) minRowIndex = i;
         }
 
-        // Если такого элемента нет, то возвращаем ошибку - решения не найдено.
-        if (minRowIndex == -1) throw std::invalid_argument("No solution");
+        // Такой элемент найден?
+        if (minRowIndex == -1) {
+            // Решение получить невозможно, возвращаем ошибку
+            throw std::invalid_argument("No solution");
+        }
 
-        // Преобразуем матрицу к новому базисному виду.
+        // Преобразуем матрицу к новому базисному виду
         subtractLineFromOther(simplexMatrix, minRowIndex, minColumnIndex);
     }
 
-    // Возвращаем свободный член в последней строке - ответ.
+    // Возвращаем свободный член в последней строке
     return simplexMatrix.back().back();
 }
 
