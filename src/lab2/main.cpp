@@ -11,14 +11,5 @@ int main() {
     {2, -1, 0, -2, 1, 0, 12}};
     std::array<double, 7> function{{6.0, 2.0, 0.0, -5.0, 0.0, 0.0, 0.0}};
 
-    auto lol = getMatrixForSimplexMethod(matrix, function);
-    for (auto & row : lol.matrix) {
-        for (auto & element : row) {
-            std::cout << std::setw(15) << element << " ";
-        }
-
-        std::cout << "\n";
-    }
-
-    solveSimplexMethod(matrix, function);
+    std::cout << solveSimplexMethodMax(matrix, function);
 }
