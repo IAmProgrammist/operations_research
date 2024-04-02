@@ -7,7 +7,7 @@
 
 template <std::size_t T, std::size_t MatrixLines>
 std::vector<std::array<double, T>> getMatrixForSimplexMethodArtificialBasis(std::vector<std::array<double, T>> matrix) {
-constexpr size_t newSize = T + MatrixLines;
+    constexpr size_t newSize = T + MatrixLines;
     // Функция для вспомогательной задачи
     std::array<double, newSize> yFunction = {};
     
@@ -98,4 +98,59 @@ double solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<double
 
     // Вызовем симплекс метод на преобразованной матрице
     return solveSimplexMethodMaxRaw(newMatrix, function);
+}
+
+template <std::size_t T, std::size_t MatrixLines>
+double solveSystemOfLinearEquationsBigPenalties(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
+    // Сформируем M, где M = сумма коэффециентов ф-ции по модулю, умноженные на 3
+    double M = 0;
+    for (auto& v : function) {
+        M += std::abs(v);
+    }
+    M = 10;
+
+    constexpr size_t newSize = T + MatrixLines;
+
+    // Функция для вспомогательной задачи
+    std::array<double, newSize> mFunction = {};
+    for (int i = 0; i < function.size() - 1; i++)
+        mFunction[i] = function[i];
+    
+    mFunction[newSize - 1] = function.back();
+    
+    // Введём новые переменные в матрицу
+    std::vector<std::array<double, newSize>> newMatrix(MatrixLines);
+
+    // Индексы базовых переменных
+    std::vector<int> baseIndices;
+
+    // Для каждой строчки исходной матрицы
+    for (int i = 0; i < matrix.size(); i++) {
+        // Если свободный коэффициент в матрице < 0, умножаем строчку на -1
+        if (matrix[i][T - 1] < 0)
+            for (int j = 0; j < T; j++)
+                matrix[i][j] *= -1;
+
+        // Копируем из исходной матрицы значения в матрицу вспомогательной задачи, 
+        // формируем вспомогательную функцию, складывая коэффициенты
+        int j = 0;
+        for (; j < matrix[0].size() - 1; j++) {
+            newMatrix[i][j] = matrix[i][j];
+            mFunction[j] += M * matrix[i][j];
+        }
+        
+        // Добавляем искусственные переменные
+        for (int k = 0; k < matrix.size(); k++) {
+            if (k == i) newMatrix[i][j + k] = 1.;
+            else newMatrix[i][j + k] = 0;
+        }
+
+        newMatrix[i][T + MatrixLines - 1] = matrix[i][T - 1];
+        mFunction[T + MatrixLines - 1] += M * matrix[i][T - 1];
+
+        baseIndices.push_back(T + i - 1);
+    }
+
+    // Вызовем симплекс метод на преобразованной матрице
+    return solveSimplexMethodMaxRaw(newMatrix, mFunction);
 }

@@ -3,6 +3,7 @@
 #include <optional>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 
 #include "../lab1/task1.tpp"
 
@@ -52,6 +53,15 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
 
     // Бесконечный цикл
     while (true) {
+        for (int i = 0; i < simplexMatrix.size(); i++) {
+            for (int j = 0; j < simplexMatrix[i].size(); j++) {
+                std::cout << std::setw(10) << simplexMatrix[i][j];
+            }
+
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+
         // Найдём наибольший по модулю отрицательный элемент в последней строке, кроме свободного члена.
         int minColumnIndex = -1;
         for (int i = 0; i < T - 1; i++) {
@@ -86,6 +96,15 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
         // Преобразуем матрицу к новому базисному виду
         subtractLineFromOther(simplexMatrix, minRowIndex, minColumnIndex);
     }
+
+    for (int i = 0; i < simplexMatrix.size(); i++) {
+        for (int j = 0; j < simplexMatrix[i].size(); j++) {
+            std::cout << std::setw(10) << simplexMatrix[i][j];
+        }
+
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
 
     for (int i = 0; i < matrix.size(); i++) 
         for (int j = 0; j < matrix[i].size(); j++) 
