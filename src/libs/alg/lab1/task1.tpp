@@ -95,7 +95,8 @@ struct Basis {
 };
 
 template <std::size_t T>
-std::vector<Basis<T>> getAllBasises(std::vector<std::array<double, T>> origin) {
+std::vector<Basis<T>> getAllBasises(std::vector<std::array<double, T>> origin, 
+std::vector<int>* filterIndices = nullptr, std::vector<int>* requiredIndices = nullptr) {
     // result - массив полученных систем 
     std::vector<Basis<T>> result;
 
@@ -103,14 +104,19 @@ std::vector<Basis<T>> getAllBasises(std::vector<std::array<double, T>> origin) {
     // его индексами 0 ... l - 1, где l - длина 
     // матрицы origin
     std::vector<int> indices;
-    for (int i = 0; i < origin[0].size() - 1; i++) 
-        indices.push_back(i);
+    if (filterIndices == nullptr)
+        for (int i = 0; i < origin[0].size() - 1; i++) 
+            indices.push_back(i);
+    else indices = *filterIndices;
     
     /*
     Для каждого сочетания в indices из l по h (h - высота матрицы) 
     получим набор базисных неизвестных basis.
     */
-    for (auto basis : getCombinations(indices, origin.size())) {
+    for (auto basis : getCombinations(indices, (requiredIndices ? (origin.size() - requiredIndices->size()) : origin.size()))) {
+        if (requiredIndices)
+            basis.insert(basis.begin(), requiredIndices->begin(), requiredIndices->end());
+
         // Для каждой перестановки строк в матрице origin matrixPermutation
         for (auto matrixPermutation : getPermutations(origin)) {
             auto copyMatrixPermutation = matrixPermutation;

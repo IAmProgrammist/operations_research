@@ -42,10 +42,9 @@ auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::
 }
 
 template <std::size_t T>
-double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
-    auto preparedMatrix = getMatrixForSimplexMethod(matrix, function);
+double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function, std::vector<int>* baseIndices = nullptr) {
     // Строим симплекс-таблицу, копируя в неё матрицу matrix
-    std::vector<std::array<double, T>> simplexMatrix(preparedMatrix.matrix);
+    std::vector<std::array<double, T>> simplexMatrix(matrix);
     // Добавляем новую строку - целевую функцию, умножая её коэф. yi на -1
     simplexMatrix.push_back(function);
     for (int i = 0; i < T; i++)
@@ -81,9 +80,16 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
             throw std::invalid_argument("No solution");
         }
 
+        if (baseIndices) 
+            (*baseIndices)[minRowIndex] = minColumnIndex;
+
         // Преобразуем матрицу к новому базисному виду
         subtractLineFromOther(simplexMatrix, minRowIndex, minColumnIndex);
     }
+
+    for (int i = 0; i < matrix.size(); i++) 
+        for (int j = 0; j < matrix[i].size(); j++) 
+            matrix[i][j] = simplexMatrix[i][j];
 
     // Возвращаем свободный член в последней строке
     return simplexMatrix.back().back();
