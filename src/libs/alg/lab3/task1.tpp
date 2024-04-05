@@ -1,15 +1,13 @@
 #pragma once
 
-#include <optional>
 #include <vector>
 #include <algorithm>
-#include <iomanip>
 #include <tuple>
 
 template <std::size_t T, std::size_t MatrixLines, std::size_t NewMatrixLength = T + MatrixLines>
 std::tuple<std::vector<std::array<double, NewMatrixLength>>, std::array<double, NewMatrixLength>, std::vector<int>>
 getDataForAuxTask(std::vector<std::array<double, T>> matrix, std::array<double, T> initialFunc = {}, double M = 1) {
-    // Создадим расширенную матрицу и функцию
+    // Инициализируем расширенную матрицу, функцию, массив индексов базовых переменных
     std::vector<std::array<double, NewMatrixLength>> newMatrix(MatrixLines);
     std::array<double, NewMatrixLength> newFunc = {};
     for (int i = 0; i < initialFunc.size() - 1; i++)
@@ -17,18 +15,19 @@ getDataForAuxTask(std::vector<std::array<double, T>> matrix, std::array<double, 
     
     newFunc[NewMatrixLength - 1] = initialFunc.back();
 
-    // Создадим индексы базовых переменных
     std::vector<int> baseIndices;
 
     // Для каждой строчки исходной матрицы
     for (int i = 0; i < matrix.size(); i++) {
-        // Если свободный коэффициент в матрице < 0, умножаем строчку на -1
+        // Если свободный коэффициент в матрице < 0, умножаем строку i на -1
         if (matrix[i][T - 1] < 0)
             for (int j = 0; j < T; j++)
                 matrix[i][j] *= -1;
 
-        // Копируем из исходной матрицы значения в матрицу вспомогательной задачи, 
-        // формируем вспомогательную функцию, складывая коэффициенты
+        // Копируем из исходной матрицы строку
+        // в новую матрицу, формируем 
+        // новую функцию, складывая 
+        // коэффициенты, умноженные на M
         int j = 0;
         for (; j < matrix[0].size() - 1; j++) {
             newMatrix[i][j] = matrix[i][j];
@@ -45,15 +44,17 @@ getDataForAuxTask(std::vector<std::array<double, T>> matrix, std::array<double, 
         newMatrix[i][T + MatrixLines - 1] = matrix[i][T - 1];
         newFunc[T + MatrixLines - 1] += M * matrix[i][T - 1];
 
+        // Добавляем в массив базовых индексов базовую переменную
         baseIndices.push_back(T + i - 1);
     }
 
+    // Возвращаем матрицу, преобразованную функцию и базис
     return {newMatrix, newFunc, baseIndices};
 }
 
 template <std::size_t T, std::size_t MatrixLines>
 double solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
-    // Получаем расщиренную матрицу для решения вспомогательной задачи
+    // Получаем расширенную матрицу для решения вспомогательной задачи
     auto expandedMatrix = getDataForAuxTask<T, MatrixLines>(matrix);
     auto newMatrix = std::get<0>(expandedMatrix);
     auto baseIndices = std::get<2>(expandedMatrix);
@@ -101,19 +102,4 @@ double solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<double
 
     // Вызовем симплекс метод на преобразованной матрице
     return solveSimplexMethodMaxRaw(b[0].matrix, function);
-}
-
-template <std::size_t T, std::size_t MatrixLines>
-double solveSystemOfLinearEquationsBigPenalties(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
-    // Сформируем M, где M = сумма коэффециентов ф-ции по модулю
-    double M = 0;
-    for (auto& v : function) {
-        M += std::abs(v);
-    }
-
-    // Получаем расширенную матрицу для решения вспомогательной задачи с заданным M и исходной функцией function
-    auto expandedMatrix = getDataForAuxTask<T, MatrixLines>(matrix, function, M);
-
-    // Вызовем симплекс метод на преобразованной матрице
-    return solveSimplexMethodMaxRaw(std::get<0>(expandedMatrix), std::get<1>(expandedMatrix));
 }

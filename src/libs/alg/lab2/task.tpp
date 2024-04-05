@@ -55,6 +55,14 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
 
     // Бесконечный цикл
     while (true) {
+        for (int i = 0; i < simplexMatrix.size(); i++) {
+            for (int j = 0; j < simplexMatrix[i].size(); j++) {
+                std::cout << std::setw(10) << simplexMatrix[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        
         // Найдём наибольший по модулю отрицательный элемент в последней строке, кроме свободного члена.
         int minColumnIndex = -1;
         for (int i = 0; i < T - 1; i++) {
