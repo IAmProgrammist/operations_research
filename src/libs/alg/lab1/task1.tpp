@@ -3,8 +3,7 @@
 #include <vector>
 #include <cstdlib>
 #include <stdexcept>
-
-#define EPS 0.00000000001
+#include "../alg.h"
 
 // Сочетания
 template<typename T>
@@ -64,10 +63,10 @@ std::vector<std::vector<T>> getPermutations(std::vector<T> &baseSet) {
     return getPermutations(baseSet, {});
 }
 
-template <std::size_t T>
-void subtractLineFromOther(std::vector<std::array<double, T>>& origin, int indexLeadingLine, int indexEnablingElement) {
+template <std::size_t T, typename CountType>
+void subtractLineFromOther(std::vector<std::array<CountType, T>>& origin, int indexLeadingLine, int indexEnablingElement, CountType EPS) {
     // Преобразуем ведущую строку таким образом, чтобы разрещающий элемент стал равен 1.
-    double originEnablingElement = origin[indexLeadingLine][indexEnablingElement];
+    CountType originEnablingElement = origin[indexLeadingLine][indexEnablingElement];
     for (int i = 0; i < origin[indexLeadingLine].size(); i++) 
         // Разделим каждый элемент строки по индексу indexLeadingLine
         // на разрешающий элемент
@@ -78,7 +77,7 @@ void subtractLineFromOther(std::vector<std::array<double, T>>& origin, int index
         if (i == indexLeadingLine) continue;
 
         // k - коэффициент, на который нужно домножить ведущую строку и вычесть её
-        double k = origin[i][indexEnablingElement];
+        CountType k = origin[i][indexEnablingElement];
 
         // Для всех остальных элементов j в строке i
         for (int j = 0; j < origin[indexLeadingLine].size(); j++)
@@ -88,17 +87,17 @@ void subtractLineFromOther(std::vector<std::array<double, T>>& origin, int index
 }
 
 // Вспомогательная СД
-template <std::size_t T>
+template <std::size_t T, typename CountType>
 struct Basis {
     std::vector<int> indices;
-    std::vector<std::array<double, T>> matrix;
+    std::vector<std::array<CountType, T>> matrix;
 };
 
-template <std::size_t T>
-std::vector<Basis<T>> getAllBasises(std::vector<std::array<double, T>> origin, 
+template <std::size_t T, typename CountType>
+std::vector<Basis<T, CountType>> getAllBasises(std::vector<std::array<CountType, T>> origin, CountType EPS, 
 std::vector<int>* filterIndices = nullptr, std::vector<int>* requiredIndices = nullptr) {
     // result - массив полученных систем 
-    std::vector<Basis<T>> result;
+    std::vector<Basis<T, CountType>> result;
 
     // indices - массив неизвестных в системе, заполняем
     // его индексами 0 ... l - 1, где l - длина 
@@ -125,10 +124,10 @@ std::vector<int>* filterIndices = nullptr, std::vector<int>* requiredIndices = n
             // Для каждой строки в матрице (ввод счётчика строк i)
             for (int i = 0; i < matrixPermutation.size(); i++) {
                 // Разрешающий элемент равен 0? 
-                if (std::abs(matrixPermutation[i][basis[i]]) < EPS) {
+                if (abs(matrixPermutation[i][basis[i]]) <= EPS) {
                     bool allZeros = true;
                     for (int j = 0; (j < matrixPermutation[i].size() - 1) && allZeros; j++) {
-                        if (std::abs(matrixPermutation[i][j]) > EPS) {
+                        if (abs(matrixPermutation[i][j]) > EPS) {
                             // Неудачное расположение строк, необходимо
                             // перейти к другой перестановке
                             badPermutation = true;
@@ -144,7 +143,7 @@ std::vector<int>* filterIndices = nullptr, std::vector<int>* requiredIndices = n
                     }
 
                     // b_i равен 0?
-                    if (std::abs(matrixPermutation[i].back()) > EPS) {
+                    if (abs(matrixPermutation[i].back()) > EPS) {
                         // Система несовместима. Вернуть пустой массив.
                         return {};
                     }
@@ -155,14 +154,14 @@ std::vector<int>* filterIndices = nullptr, std::vector<int>* requiredIndices = n
                     */
                     if (allZeros) {
                         copyMatrixPermutation.erase(copyMatrixPermutation.begin() + i);
-                        return getAllBasises(copyMatrixPermutation);
+                        return getAllBasises(copyMatrixPermutation, EPS);
                     }
 
                     break;
                 }
 
                 // Выберем ведущую переменную из basis[i], преобразуем i строку и вычтем её из остальных
-                subtractLineFromOther(matrixPermutation, i, basis[i]);
+                subtractLineFromOther(matrixPermutation, i, basis[i], EPS);
             }
 
             if (badPermutation) continue;

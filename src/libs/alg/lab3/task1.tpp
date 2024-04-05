@@ -4,12 +4,14 @@
 #include <algorithm>
 #include <tuple>
 
-template <std::size_t T, std::size_t MatrixLines, std::size_t NewMatrixLength = T + MatrixLines>
-std::tuple<std::vector<std::array<double, NewMatrixLength>>, std::array<double, NewMatrixLength>, std::vector<int>>
-getDataForAuxTask(std::vector<std::array<double, T>> matrix, std::array<double, T> initialFunc = {}, double M = 1) {
+#include "../alg.h"
+
+template <std::size_t T, std::size_t MatrixLines, typename CountType, std::size_t NewMatrixLength = T + MatrixLines>
+std::tuple<std::vector<std::array<CountType, NewMatrixLength>>, std::array<CountType, NewMatrixLength>, std::vector<int>>
+getDataForAuxTask(std::vector<std::array<CountType, T>> matrix, CountType EPS, std::array<CountType, T> initialFunc = {}, CountType M = 1) {
     // Инициализируем расширенную матрицу, функцию, массив индексов базовых переменных
-    std::vector<std::array<double, NewMatrixLength>> newMatrix(MatrixLines);
-    std::array<double, NewMatrixLength> newFunc = {};
+    std::vector<std::array<CountType, NewMatrixLength>> newMatrix(MatrixLines);
+    std::array<CountType, NewMatrixLength> newFunc = {};
     for (int i = 0; i < initialFunc.size() - 1; i++)
         newFunc[i] = initialFunc[i];
     
@@ -20,7 +22,7 @@ getDataForAuxTask(std::vector<std::array<double, T>> matrix, std::array<double, 
     // Для каждой строчки исходной матрицы
     for (int i = 0; i < matrix.size(); i++) {
         // Если свободный коэффициент в матрице < 0, умножаем строку i на -1
-        if (matrix[i][T - 1] < 0)
+        if (matrix[i][T - 1] < CountType())
             for (int j = 0; j < T; j++)
                 matrix[i][j] *= -1;
 
@@ -52,18 +54,18 @@ getDataForAuxTask(std::vector<std::array<double, T>> matrix, std::array<double, 
     return {newMatrix, newFunc, baseIndices};
 }
 
-template <std::size_t T, std::size_t MatrixLines>
-double solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
+template <std::size_t T, std::size_t MatrixLines, typename CountType>
+CountType solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<CountType, T>>& matrix, std::array<CountType, T>& function, CountType EPS) {
     // Получаем расширенную матрицу для решения вспомогательной задачи
-    auto expandedMatrix = getDataForAuxTask<T, MatrixLines>(matrix);
+    auto expandedMatrix = getDataForAuxTask<T, MatrixLines>(matrix, EPS);
     auto newMatrix = std::get<0>(expandedMatrix);
     auto baseIndices = std::get<2>(expandedMatrix);
     // Решаем полученную вспомогательную задачу симплекс методом
-    double ans = solveSimplexMethodMaxRaw(newMatrix, std::get<1>(expandedMatrix), &baseIndices);
+    CountType ans = solveSimplexMethodMaxRaw(newMatrix, std::get<1>(expandedMatrix), EPS, &baseIndices);
 
     // Если ответ для всп. функции не равен нулю - выбрасываем ошибку, матрицу привести к нужному виду 
     // не получится
-    if (std::abs(ans) > 0.00000001) 
+    if (abs(ans) > EPS) 
         throw std::invalid_argument("No basis found");
     
     // Копируем полученную матрицу в исходную, обрезая столбцы с 
@@ -93,7 +95,7 @@ double solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<double
     }
 
     // Приводим матрицу к новому базису, учитывая filterIndices и requiredIndices
-    auto b = getAllBasises(matrix, &filterIndices, &requiredIndices);
+    auto b = getAllBasises(matrix, EPS, &filterIndices, &requiredIndices);
 
     // Если к таковому привести невозможно, выбрасываем ошибку, матрицу привести к нужному виду 
     // не получится
@@ -101,5 +103,5 @@ double solveSystemOfLinearEquationsArtificialBasis(std::vector<std::array<double
         throw std::invalid_argument("No basis found");
 
     // Вызовем симплекс метод на преобразованной матрице
-    return solveSimplexMethodMaxRaw(b[0].matrix, function);
+    return solveSimplexMethodMaxRaw(b[0].matrix, function, EPS);
 }

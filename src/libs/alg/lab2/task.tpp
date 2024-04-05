@@ -5,19 +5,20 @@
 #include <algorithm>
 #include <iomanip>
 
-#include "../lab1/task1.tpp"
+#include "../alg.h"
+#include "../fraction.hpp"
 
-template <std::size_t T>
-auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
+template <std::size_t T, typename CountType>
+auto getMatrixForSimplexMethod(std::vector<std::array<CountType, T>>& matrix, std::array<CountType, T>& function, CountType EPS) {
     // Определим, какие переменные могут быть базисными в опорном решении и занесём их в список functionBasisVars
     // (Если yi = 0, то переменная может быть базисной)
     std::vector<int> functionBasisVars;
     for (int i = 0; i < function.size() - 1; i++) 
-        if (std::abs(function[i]) < EPS) 
+        if (abs(function[i]) <= EPS) 
             functionBasisVars.push_back(i);
     
     // Получим все базисные решения и для каждого решения basis
-    for (auto& basis : getAllBasises(matrix)) {
+    for (auto& basis : getAllBasises(matrix, EPS)) {
         bool isAllBsMoreOrEqualToZero = true;
         for (int i = 0; i < basis.matrix.size() && isAllBsMoreOrEqualToZero; i++) {
             if (basis.matrix[i].back() < EPS) 
@@ -42,11 +43,11 @@ auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::
     throw std::invalid_argument("No basis for function found");
 }
 
-template <std::size_t T>
-double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function, std::vector<int>* baseIndices = nullptr) {
+template <std::size_t T, typename CountType>
+CountType solveSimplexMethodMaxRaw(std::vector<std::array<CountType, T>>& matrix, std::array<CountType, T>& function, CountType EPS, std::vector<int>* baseIndices = nullptr) {
     
     // Строим симплекс-таблицу, копируя в неё матрицу matrix
-    std::vector<std::array<double, T>> simplexMatrix(matrix);
+    std::vector<std::array<CountType, T>> simplexMatrix(matrix);
     
     // Добавляем новую строку - целевую функцию, умножая её коэф. yi на -1
     simplexMatrix.push_back(function);
@@ -55,18 +56,10 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
 
     // Бесконечный цикл
     while (true) {
-        for (int i = 0; i < simplexMatrix.size(); i++) {
-            for (int j = 0; j < simplexMatrix[i].size(); j++) {
-                std::cout << std::setw(10) << simplexMatrix[i][j] << " ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-        
         // Найдём наибольший по модулю отрицательный элемент в последней строке, кроме свободного члена.
         int minColumnIndex = -1;
         for (int i = 0; i < T - 1; i++) {
-            if (simplexMatrix.back()[i] < 0 && (minColumnIndex == -1 || simplexMatrix.back()[minColumnIndex] > simplexMatrix.back()[i]))
+            if (simplexMatrix.back()[i] < CountType() && (minColumnIndex == -1 || simplexMatrix.back()[minColumnIndex] > simplexMatrix.back()[i]))
                 minColumnIndex = i;
         }
 
@@ -95,7 +88,7 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
             (*baseIndices)[minRowIndex] = minColumnIndex;
 
         // Преобразуем матрицу к новому базисному виду
-        subtractLineFromOther(simplexMatrix, minRowIndex, minColumnIndex);
+        subtractLineFromOther(simplexMatrix, minRowIndex, minColumnIndex, EPS);
     }
 
     for (int i = 0; i < matrix.size(); i++) 
@@ -106,12 +99,12 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
     return simplexMatrix.back().back();
 }
 
-template <std::size_t T>
-double solveSimplexMethodMax(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function) {
+template <std::size_t T, typename CountType>
+CountType solveSimplexMethodMax(std::vector<std::array<CountType, T>>& matrix, std::array<CountType, T>& function, CountType EPS) {
     // Подготовим матрицу таким образом, чтобы в целевой функции были использованы только свободные переменные. 
     // Также отберём опорное решение, в котором все свободные члены больше или равны нулю
-    auto preparedMatrix = getMatrixForSimplexMethod(matrix, function);
+    auto preparedMatrix = getMatrixForSimplexMethod(matrix, function, EPS);
     
     // Вызовем симплекс метод на преобразованной матрице
-    return solveSimplexMethodMaxRaw(preparedMatrix.matrix, function);
+    return solveSimplexMethodMaxRaw(preparedMatrix.matrix, function, EPS);
 }

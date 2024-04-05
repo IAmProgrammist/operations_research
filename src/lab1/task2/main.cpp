@@ -17,7 +17,7 @@ int main() {
     {-3, -4,  7,  6, -1,  4, 70}};
 
     // Получаем все базисные решения для матрицы при помощи getAllBasises
-    auto res = getAllBasises(matrix);
+    auto res = getAllBasises<7, double>(matrix, 0.00000001);
 
     // Вводим переменные для хранения максимального значения функции и оптимального плана решения 
     double maxFunctionValue = std::numeric_limits<double>::min();
@@ -30,7 +30,7 @@ int main() {
     for (auto &basis : res) {
         bool isAllBsMoreOrEqualToZero = true;
         for (int i = 0; i < basis.matrix.size() && isAllBsMoreOrEqualToZero; i++) {
-            if (basis.matrix[i].back() < EPS) 
+            if (basis.matrix[i].back() < 0.000000001) 
                 isAllBsMoreOrEqualToZero = false;
         }
 
@@ -47,7 +47,7 @@ int main() {
             // Базисная переменная есть в решении?
             if (std::find(basis.indices.begin(), basis.indices.end(), i) != basis.indices.end()) {
                 for (int j = 0; j < basis.matrix.size(); j++) {
-                    if (std::abs(basis.matrix[j][i] - 1.0) < EPS) {
+                    if (std::abs(basis.matrix[j][i] - 1.0) < 0.000000001) {
                         // Прибавляем значение br, умноженное на коэффициент в функции
                         z += function[i] * basis.matrix[j].back();
                         B.push_back(basis.matrix[j].back());
