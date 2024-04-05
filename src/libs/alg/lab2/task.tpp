@@ -44,8 +44,10 @@ auto getMatrixForSimplexMethod(std::vector<std::array<double, T>>& matrix, std::
 
 template <std::size_t T>
 double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std::array<double, T>& function, std::vector<int>* baseIndices = nullptr) {
+    
     // Строим симплекс-таблицу, копируя в неё матрицу matrix
     std::vector<std::array<double, T>> simplexMatrix(matrix);
+    
     // Добавляем новую строку - целевую функцию, умножая её коэф. yi на -1
     simplexMatrix.push_back(function);
     for (int i = 0; i < T; i++)
@@ -53,15 +55,6 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
 
     // Бесконечный цикл
     while (true) {
-        for (int i = 0; i < simplexMatrix.size(); i++) {
-            for (int j = 0; j < simplexMatrix[i].size(); j++) {
-                std::cout << std::setw(10) << simplexMatrix[i][j];
-            }
-
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-
         // Найдём наибольший по модулю отрицательный элемент в последней строке, кроме свободного члена.
         int minColumnIndex = -1;
         for (int i = 0; i < T - 1; i++) {
@@ -96,15 +89,6 @@ double solveSimplexMethodMaxRaw(std::vector<std::array<double, T>>& matrix, std:
         // Преобразуем матрицу к новому базисному виду
         subtractLineFromOther(simplexMatrix, minRowIndex, minColumnIndex);
     }
-
-    for (int i = 0; i < simplexMatrix.size(); i++) {
-        for (int j = 0; j < simplexMatrix[i].size(); j++) {
-            std::cout << std::setw(10) << simplexMatrix[i][j];
-        }
-
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
 
     for (int i = 0; i < matrix.size(); i++) 
         for (int j = 0; j < matrix[i].size(); j++) 
