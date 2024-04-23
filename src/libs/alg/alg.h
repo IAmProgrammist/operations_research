@@ -9,5 +9,6 @@ using std::abs;
 #include "./lab2/task.tpp"
 #include "./lab3/task1.tpp"
 #include "./lab3/task2.tpp"
+#include "./lab4/task2.tpp"
 
 #endif
