@@ -94,6 +94,9 @@ CountType solveSimplexMethodMaxRaw(std::vector<std::array<CountType, T>>& matrix
     for (int i = 0; i < matrix.size(); i++) 
         for (int j = 0; j < matrix[i].size(); j++) 
             matrix[i][j] = simplexMatrix[i][j];
+    
+    for (int i = 0; i < T; i++) 
+        function[i] = simplexMatrix.back()[i];
 
     // Возвращаем свободный член в последней строке
     return simplexMatrix.back().back();
