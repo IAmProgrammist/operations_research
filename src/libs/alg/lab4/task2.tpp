@@ -74,13 +74,13 @@ void getTransportTaskBasisLeastCost(std::vector<std::array<CountType, T>> &c, st
 
         // Если ai >= bj
         if (abs(a[iMin] - b[jMin]) < EPS || a[iMin] > b[jMin]) {
-            // Вычёркиваем строчку
+            // Вычёркиваем строчку, обновляем x, a
             usedCols[jMin] = true;
             x[iMin][jMin] = b[jMin];
             a[iMin] -= b[jMin];
         // Иначе
         } else {
-            // Вычёркиваем столбец
+            // Вычёркиваем столбец, обновляем x, b
             usedRows[iMin] = true;
             x[iMin][jMin] = a[iMin];
             b[jMin] -= a[iMin];
@@ -134,6 +134,7 @@ CountType min, bool minAssigned, CountType sum, int it, int state, CountType EPS
     // Для каждой найденной вершины из selectedNodes
     for (auto& node : selectedNodes) {
         // Если достигли начальной вершины, добавляем в конечный результат цикл
+        // и переходим к следующей вершине
         if (node == init) {
             recResult.push_back({sum, min, result});
             continue;
@@ -232,7 +233,7 @@ CountType solveTransportTaskDistributionMethod(std::vector<std::array<CountType,
         bool foundAny = false;
         std::tuple<CountType, CountType, std::vector<std::pair<int, int>>> search;
 
-        // Ищем незаполненные клетки, для которых сумма будет отрицательна
+        // Ищем незаполненную клетку, для которой сумма будет отрицательна
         for (int i = 0; i < MatrixLines && !foundAny; i++) {
             for (int j = 0; j < T; j++) {
                 if (abs(x[i][j]) > EPS) continue;
@@ -253,7 +254,6 @@ CountType solveTransportTaskDistributionMethod(std::vector<std::array<CountType,
 
         std::vector<std::pair<int, int>> path = std::get<2>(search);
         CountType minv = std::get<1>(search);
-        auto pukpuk = std::get<0>(search);
 
         // Если такая сумма есть, то выполняем сдвиг на min, иначе - выходим из цикла
         moveTransportTaskCycle(x, path, minv, EPS);
@@ -278,7 +278,7 @@ void recalculatePotentials(std::vector<std::array<CountType, T>> &c, std::vector
     while (foundAny) {
         foundAny = false;
 
-        // Для всех заполненных клеток, для который ui и vj не вычислено
+        // Для всех заполненных клеток, для которых ui и vj не вычислено
         for (int i = 0; i < MatrixLines; i++) {
             for (int j = 0; j < T; j++) {
                 if (abs(x[i][j]) < EPS) continue;
@@ -325,13 +325,14 @@ CountType solveTransportTaskPotentials(std::vector<std::array<CountType, T>> c, 
         recalculatePotentials(c, x, potentialsV, potentialsU, EPS);
         int i, j;
         bool foundAny = false;
-        // Находим отрицательную сумму
+        // Для каждой пустой клетки
         for (i = 0; i < MatrixLines; i++) {
             for (j = 0; j < T; j++) {
                 if (x[i][j] > EPS) continue;
 
                 CountType t = c[i][j] - (potentialsU[i] + potentialsV[j]);
-
+                
+                // Ищем первую клетку, для которой сумма будет отрицательна
                 if (t < -EPS) {
                     foundAny = true;
                     break;
@@ -343,9 +344,8 @@ CountType solveTransportTaskPotentials(std::vector<std::array<CountType, T>> c, 
         // Если такой суммы нет, выходим из цикла
         if (!foundAny) break;
 
-        // Иначе находим путь для найденной вершины
+        // Иначе находим цикл для найденной вершины
         auto search = getTransportTaskCycles(c, x, a, b, i, j, EPS)[0];
-        auto pukpuk = std::get<0>(search);
         // И выполняем сдвиг на min
         moveTransportTaskCycle(x, std::get<2>(search), std::get<1>(search), EPS);
     }
