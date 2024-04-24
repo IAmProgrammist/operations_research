@@ -45,17 +45,22 @@ template <std::size_t T, std::size_t MatrixLines, typename CountType>
 void getTransportTaskBasisLeastCost(std::vector<std::array<CountType, T>> &c, std::vector<std::array<CountType, T>> &x, std::array<CountType, MatrixLines> &a, std::array<CountType, T> &b, CountType EPS) {
     std::array<bool, T> usedCols = {};
     std::array<bool, MatrixLines> usedRows = {};
+    
+    // Бесконечный цикл
     while(true) {
         bool foundAny = false;
         int iMin, jMin;
 
+        // Для каждого элемента cij, оставшегося в матрице
         for (int i = 0; i < MatrixLines; i++) {
             if (usedRows[i]) continue;
             
             for (int j = 0; j < T; j++) {
                 if (usedCols[j]) continue;
 
+                // Если cij < cmin
                 if (!foundAny || c[iMin][jMin] > c[i][j]) {
+                    // Обновлям данные
                     iMin = i;
                     jMin = j;
 
@@ -64,27 +69,16 @@ void getTransportTaskBasisLeastCost(std::vector<std::array<CountType, T>> &c, st
             }
         }
 
+        // Если элемент не найден, выходим из цикла
         if (!foundAny) break;
 
-        if (abs(a[iMin] - b[jMin]) < EPS) {
-            if (jMin == T - 1) {
-                // Вычёркиваем строчку
-                usedCols[jMin] = true;
-                x[iMin][jMin] = b[jMin];
-                a[iMin] -= b[jMin];
-            } else {
-                // Вычёркиваем столбец
-                usedRows[iMin] = true;
-                x[iMin][jMin] = a[iMin];
-                b[jMin] -= a[iMin];
-            }
-        // Если ak > br
-        } else if (a[iMin] > b[jMin]) {
+        // Если ai >= bj
+        if (abs(a[iMin] - b[jMin]) < EPS || a[iMin] > b[jMin]) {
             // Вычёркиваем строчку
             usedCols[jMin] = true;
             x[iMin][jMin] = b[jMin];
             a[iMin] -= b[jMin];
-        // Если ak < br
+        // Иначе
         } else {
             // Вычёркиваем столбец
             usedRows[iMin] = true;
@@ -101,10 +95,14 @@ CountType min, bool minAssigned, CountType sum, int it, int state, CountType EPS
     std::vector<std::tuple<CountType, CountType, std::vector<std::pair<int, int>>>> recResult;
     std::vector<std::pair<int, int>> selectedNodes;
 
+    // Ищем подходящие вершины и сохраняем в selectedNodes
     if (state == -1 || state == 0) {
+        // Выполняем поиск по столбцу, если ранее был выполнен поиск по строчке
+        // или мы находимся в начальной вершине
         state = 1;
         
-        // Ищем вершину среди базисных переменных или изначальную вершину
+        // Пропускаем текущий элемент и элементы, которые уже находятся в пути. 
+        // Остальные элементы с xij != 0 добавляем в selectedNodes
         for (int k = 0; k < MatrixLines; k++) {
             if (k == curr.first) continue;
             if ((abs(x[k][curr.second]) > EPS && std::find(result.begin(), result.end(), std::pair<int, int>(k, curr.second)) == result.end()) || 
@@ -112,9 +110,12 @@ CountType min, bool minAssigned, CountType sum, int it, int state, CountType EPS
                 selectedNodes.push_back({k, curr.second});
             } 
         }
-    } else if (state == -1 || state == 1) {
+    } else {
+        // Иначе по строке
         state = 0;
         
+        // Пропускаем текущий элемент и элементы, которые уже находятся в пути. 
+        // Остальные элементы с xij != 0 добавляем в selectedNodes
         for (int k = 0; k < T; k++) {
             if (k == curr.second) continue;
             if ((abs(x[curr.first][k]) > EPS && std::find(result.begin(), result.end(), std::pair<int, int>(curr.first, k)) == result.end()) || 
@@ -124,17 +125,21 @@ CountType min, bool minAssigned, CountType sum, int it, int state, CountType EPS
         }
     }
 
+    // Если вершин не найдено, возвращаем пустой массив
     if (selectedNodes.empty()) {
         return {};
     }
 
     it++;
+    // Для каждой найденной вершины из selectedNodes
     for (auto& node : selectedNodes) {
+        // Если достигли начальной вершины, добавляем в конечный результат цикл
         if (node == init) {
             recResult.push_back({sum, min, result});
             continue;
         }
 
+        // Обновляем минимум, если вершина отрицательная
         auto newMin = min;
         auto newMinAssigned = minAssigned;
         if (it % 2 && (x[node.first][node.second] < newMin || !newMinAssigned)) {
@@ -143,20 +148,25 @@ CountType min, bool minAssigned, CountType sum, int it, int state, CountType EPS
             newMinAssigned = true;
         }
 
+        // Добавляем cij к sum, если вершина со знаком плюс, иначе - вычитаем
         auto newSum = sum;
-        // Добавляем cij к sum, если вершина со знаком плюс, иначе - минус
         if (it % 2 == 0) {
             newSum += c[node.first][node.second];
         } else {
             newSum -= c[node.first][node.second];
         }
+
+        // Добавляем вершину в цикл
         auto newResult = result;
         newResult.push_back(node);
 
+        // Рекурсивно вызываем поиск дальнейших вершин и вставляем
+        // в результат выоплнения функции
         auto recNextResult = getTransportTaskCycles(c, x, a, b, init, newResult, node, newMin, newMinAssigned, newSum, it, state, EPS);
         recResult.insert(recResult.end(), recNextResult.begin(), recNextResult.end());
     }
 
+    // Возвращаем массив циклов
     return recResult;
 }
 
@@ -173,6 +183,7 @@ std::array<CountType, MatrixLines> a, std::array<CountType, T> b, int i, int j, 
     int it = 0;
     int state = -1;
 
+    // Рекурсивно вызываем метод поиска циклов
     return getTransportTaskCycles(c, x, a, b, init, result, curr, min, minAssigned, sum, it, state, EPS);
 }
 

@@ -18,5 +18,6 @@ int main() {
     std::array<double, 4> a{{{14}, {14 }, {14}, {14}}};
     std::array<double, 5> b{{{13}, {5}, {13}, {12}, {13}}};
 
+    // Вывести ответ на транспортную задачу
     std::cout << solveTransportTaskPotentials(c, a, b, 0.00000001);
 }
