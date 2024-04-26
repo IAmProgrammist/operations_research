@@ -12,7 +12,7 @@ int main() {
     std::array<Fraction, 5> function{{{-3}, {9}, {1}, {4}, {0}}};
 
     // Вывод ответа
-    auto g = solveDualSimplexMethod<5, 3, Fraction>(matrix, function, MIN, Fraction());
+    auto g = solveCommonDualSimplexMethod<5, 3, Fraction>(matrix, function, MIN, Fraction());
     std::cout << std::get<0>(g) << std::endl;
     auto l = std::get<1>(g);
     for (int i = 0; i < l.size(); i++) {

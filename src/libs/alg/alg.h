@@ -11,5 +11,6 @@ using std::abs;
 #include "./lab3/task2.tpp"
 #include "./lab4/task2.tpp"
 #include "./lab5/task2.tpp"
+#include "./lab5/task3.tpp"
 
 #endif

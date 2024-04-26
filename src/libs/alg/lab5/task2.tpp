@@ -32,20 +32,9 @@ getDualProblem(std::vector<std::array<CountType, T>> sourceSystem, std::array<Co
     return {resMatrix, resFunc, extr == MIN ? MAX : MIN};
 } 
 
-template <std::size_t T, std::size_t MatrixLines, typename CountType>
-std::tuple<CountType, std::vector<CountType>> solveDualSimplexMethod(std::vector<std::array<CountType, T>> sourceSystem, std::array<CountType, T> sourceFunc, Extremum extr, CountType EPS) {
-    if (extr == MIN) {
-        auto reversed = getDualProblem<T, MatrixLines, CountType>(sourceSystem, sourceFunc, extr);
-        std::rota
-        return solveDualSimplexMethod<MatrixLines + 1, T - 1, CountType>(std::get<0>(reversed), std::get<1>(reversed), std::get<2>(reversed), EPS);
-    }
-
-    for (int i = 0; i < MatrixLines; i++) {
-        if (sourceSystem[i].back() < EPS) throw std::invalid_argument("Basis is incorrect");
-    }
-
-    constexpr size_t ExtendedMatrixSize = T + MatrixLines; 
-    std::vector<std::array<CountType, ExtendedMatrixSize>> newSystem;
+template <std::size_t T, std::size_t MatrixLines, typename CountType, std::size_t ExtendedMatrixSize = T + MatrixLines>
+std::tuple<std::array<CountType, ExtendedMatrixSize>, std::vector<std::array<CountType, ExtendedMatrixSize>>> introduceNewVariables(std::vector<std::array<CountType, T>> sourceSystem, std::array<CountType, T> sourceFunc) {
+std::vector<std::array<CountType, ExtendedMatrixSize>> newSystem;
     for (int i = 0; i < MatrixLines; i++) {
         newSystem.push_back({});
     }
@@ -64,6 +53,29 @@ std::tuple<CountType, std::vector<CountType>> solveDualSimplexMethod(std::vector
         newFunc[i] = sourceFunc[i];
     }
 
-    CountType ans = solveSimplexMethodMaxRaw(newSystem, newFunc, EPS);
-    return {ans, std::vector<CountType>(newFunc.begin(), newFunc.end())};
+    return {newFunc, newSystem};
+}
+
+template <std::size_t T, std::size_t MatrixLines, typename CountType, std::size_t ExtendedMatrixSize = T + MatrixLines>
+std::tuple<CountType, std::vector<CountType>> solveDualSimplexMethod(std::vector<std::array<CountType, T>> sourceSystem, std::array<CountType, T> sourceFunc, Extremum extr, CountType EPS) {
+    // Если экстремум - минимум
+    if (extr == MIN) {
+        // То получаем двойственную задачу и решаем её той же функцией
+        auto reversed = getDualProblem<T, MatrixLines, CountType>(sourceSystem, sourceFunc, extr);
+        auto res = solveDualSimplexMethod<MatrixLines + 1, T - 1, CountType>(std::get<0>(reversed), std::get<1>(reversed), std::get<2>(reversed), EPS);
+        auto newF = std::get<1>(res);
+        std::rotate(newF.begin(), newF.begin() + T - 2, newF.end());
+
+        return {std::get<0>(res), newF};
+    }
+
+    // Вводим дополнительные переменные
+    auto newVars = introduceNewVariables<T, MatrixLines, CountType>(sourceSystem, sourceFunc);
+    auto newFunc = std::get<0>(newVars);
+    auto newSystem = std::get<1>(newVars);
+
+    // Решаем обычным симплекс-методом
+    CountType ans = solveSimplexMethodMax(newSystem, newFunc, EPS);
+    // Возвращаем последнюю строчку
+    return {ans, std::vector<CountType>(newFunc.begin(), newFunc.end() - 1)};
 }

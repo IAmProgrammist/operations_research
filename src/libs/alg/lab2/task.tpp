@@ -31,12 +31,9 @@ auto getMatrixForSimplexMethod(std::vector<std::array<CountType, T>>& matrix, st
             continue;
         }
 
-        // Если список базисных переменных из опорного решения basis входит в список
-        // functionBasisVars
         std::sort(basis.indices.begin(), basis.indices.end());
-        if (std::includes(basis.indices.begin(), basis.indices.end(), functionBasisVars.begin(), functionBasisVars.end()))
-            // Возвращаем искомый базис
-            return basis;
+        // Возвращаем искомый базис
+        return basis;
     }
 
     // Возвращаем ошибку - получить подходящее преобразование матрицы невозможно
