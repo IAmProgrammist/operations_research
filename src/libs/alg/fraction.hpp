@@ -56,6 +56,8 @@ class Fraction {
 		void convertDoubleToFraction(double Number);
 		double convertFractionToDouble(void);
 		bool convertStringToFraction(std::string FractionString);
+		bool isInt();
+		Fraction getFrac();
 
 		// Operator overloading functions
 		bool operator<(Fraction fraction);

@@ -53,6 +53,14 @@ CountType solveSimplexMethodMaxRaw(std::vector<std::array<CountType, T>>& matrix
 
     // Бесконечный цикл
     while (true) {
+        for (int i = 0; i < simplexMatrix.size(); i++) {
+            for (int j = 0; j < T; j++) {
+                std::cout << std::setw(10) << simplexMatrix[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+
         // Найдём наибольший по модулю отрицательный элемент в последней строке, кроме свободного члена.
         int minColumnIndex = -1;
         for (int i = 0; i < T - 1; i++) {
@@ -106,5 +114,13 @@ CountType solveSimplexMethodMax(std::vector<std::array<CountType, T>>& matrix, s
     auto preparedMatrix = getMatrixForSimplexMethod(matrix, function, EPS);
     
     // Вызовем симплекс метод на преобразованной матрице
-    return solveSimplexMethodMaxRaw(preparedMatrix.matrix, function, EPS);
+    auto ans = solveSimplexMethodMaxRaw(preparedMatrix.matrix, function, EPS);
+
+    for (int i = 0; i < preparedMatrix.matrix.size(); i++) {
+        for (int j = 0; j < T; j++) {
+            matrix[i][j] = preparedMatrix.matrix[i][j];
+        }
+    }
+
+    return ans;
 }

@@ -10,20 +10,18 @@
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     // Инициализируем матрицу
-    std::vector<std::array<double, 7>> matrix = {
-    {1,  -4,  8,  9, -3, -1, 87},
-    {8,   1, -3,  4,  5,  6, 11},
-    {4,   0,  1,  3, -2, -5, 17},
-    {-3, -4,  7,  6, -1,  4, 70}};
+    std::vector<std::array<double, 5>> matrix = {
+    {-1, 3, 1, 0, 2},
+    {3, 2, 0, 1, 6}};
 
     // Получаем все базисные решения для матрицы при помощи getAllBasises
-    auto res = getAllBasises<7, double>(matrix, 0.00000001);
+    auto res = getAllBasises<5, double>(matrix, 0.00000001);
 
     // Вводим переменные для хранения максимального значения функции и оптимального плана решения 
     double maxFunctionValue = std::numeric_limits<double>::min();
     std::vector<double> maxB;
     // Задаём функцию z = -3 * x1 + x2 + 121 * x3 - 7 * x6
-    std::vector<double> function = {-3, 1, 121, 0, 0, -7};
+    std::vector<double> function = {1, 4, 0, 0, 0};
     std::cout << "==================================================================================================================\n";
 
     // Для всех полученных базисов

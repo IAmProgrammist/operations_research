@@ -115,6 +115,21 @@ bool Fraction::reduce(void) {
 	}
 }
 
+bool Fraction::isInt() {
+	this->reduce();
+	return getDenominator() == 1;
+}
+
+Fraction Fraction::getFrac() {
+	Fraction c = *this;
+	while (!c.isInt()) {
+		c.setNumerator(c.getNumerator() - 1);
+	}
+
+	return *this - c;
+	
+}
+
 /**
  * Convert function for double to fraction
  *
@@ -411,8 +426,8 @@ std::ostream& operator<<(std::ostream &out, Fraction &Fraction) {
     std::stringstream to_print;
     if (Fraction.getNumerator() % Fraction.getDenominator() == 0) {
         to_print << Fraction.getNumerator() / Fraction.getDenominator();
-    } else if (Fraction.getNumerator() / Fraction.getDenominator() != 0) {
-        to_print << Fraction.getNumerator() / Fraction.getDenominator() << "_" << std::abs(Fraction.getNumerator()) % std::abs(Fraction.getDenominator()) << "/" << Fraction.getDenominator();
+    //} else if (Fraction.getNumerator() / Fraction.getDenominator() != 0) {
+        //to_print << Fraction.getNumerator() / Fraction.getDenominator() << "_" << std::abs(Fraction.getNumerator()) % std::abs(Fraction.getDenominator()) << "/" << Fraction.getDenominator();
     } else     
     to_print << Fraction.getNumerator() << "/" << Fraction.getDenominator();
 
